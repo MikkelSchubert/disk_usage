@@ -1,0 +1,9 @@
+[package]
+name = "disk_usage"
+version = "0.1.0"
+authors = ["Mikkel Schubert <MikkelSch@gmail.com>"]
+
+[dependencies]
+libc = "0.2.13"
+nix = "0.6.0"
+clap = "2.20.5"
