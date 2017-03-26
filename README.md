@@ -1,6 +1,7 @@
 Simple tool to list disk-usage at path stratified by owner.
 
 Example output formatted using retable:
+
     User       NFiles    NLinks    Size        Raw             Frac
     user1      1         0         0           0               0.000
     user2      129       0         0           0               0.000
