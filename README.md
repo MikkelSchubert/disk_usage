@@ -1,6 +1,6 @@
 Simple tool to list disk-usage at path stratified by owner.
 
-# Example output (formatted)
+## Example output (formatted)
 
     $ disk_usage /path/to/files/
     User       NFiles    NLinks    Size        Raw             Frac
