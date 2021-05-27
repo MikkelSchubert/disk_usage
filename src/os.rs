@@ -20,7 +20,7 @@ pub fn get_username(uid: u32) -> Result<String, String> {
                 let len = buff.len();
                 buff.resize(len * 2, 0);
             } else if err == 0 && result == &mut passwd && !passwd.pw_name.is_null() {
-                let cstr = ::std::ffi::CString::from_raw(passwd.pw_name);
+                let cstr = ::std::ffi::CStr::from_ptr(passwd.pw_name);
 
                 return if let Ok(s) = cstr.to_str() {
                     Ok(s.into())
