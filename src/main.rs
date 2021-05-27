@@ -65,10 +65,10 @@ type UserMap = ::std::collections::HashMap<u32, User>;
 
 fn format_size(n_bytes: u64) -> String {
     let (div, desc) = match n_bytes {
-        0 ... 1023 => return format!("{}", n_bytes),
-        1024 ... 1048575 => (2u64.pow(10), " KB"),
-        1048576 ... 1073741823 => (2u64.pow(20), " MB"),
-        1073741824 ... 1099511627775 => (2u64.pow(30), " GB"),
+        0 ..= 1023 => return format!("{}", n_bytes),
+        1024 ..= 1048575 => (2u64.pow(10), " KB"),
+        1048576 ..= 1073741823 => (2u64.pow(20), " MB"),
+        1073741824 ..= 1099511627775 => (2u64.pow(30), " GB"),
         _ => (2u64.pow(40), " TB"),
     };
 
@@ -76,7 +76,7 @@ fn format_size(n_bytes: u64) -> String {
 }
 
 
-fn walk(path: &Path, func: &mut FnMut(&Path, &Metadata)) {
+fn walk(path: &Path, func: &mut dyn FnMut(&Path, &Metadata)) {
     let metadata = match path.symlink_metadata() {
         Ok(v) => v,
         Err(e) => {
