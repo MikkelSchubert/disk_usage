@@ -4,15 +4,14 @@ mod os;
 
 use os::*;
 
-use std::io::Write;
-use std::path::Path;
 use std::fs::Metadata;
+use std::io::Write;
 use std::os::unix::fs::MetadataExt;
+use std::path::Path;
 
-use clap::{App,Arg,ArgMatches};
+use clap::{App, Arg, ArgMatches};
 
 type FileHashSet = ::std::collections::HashSet<(u64, u64)>;
-
 
 macro_rules! stderr(
     ($($arg:tt)*) => { {
@@ -21,7 +20,6 @@ macro_rules! stderr(
     } }
 );
 
-
 macro_rules! stderrln(
     ($($arg:tt)*) => { {
         let result = writeln!(&mut ::std::io::stderr(), $($arg)*);
@@ -29,28 +27,35 @@ macro_rules! stderrln(
     } }
 );
 
-
 struct Counter {
-	count: u64,
-	total: u64,
+    count: u64,
+    total: u64,
 }
-
 
 impl Counter {
-	fn inc(&mut self, path: &Path, size: u64) {
-	    self.count += 1;
-	    self.total += size;
-	    if self.count % 10000 == 0 {
-	        let s = path.to_string_lossy().chars().take(78).collect::<String>();
-    	    stderr!("\r{} files, {}: {:<78}..", self.count, format_size(self.total), s);
-	    }
-	}
+    fn inc(&mut self, path: &Path, size: u64) {
+        self.count += 1;
+        self.total += size;
+        if self.count % 10000 == 0 {
+            let s = path.to_string_lossy().chars().take(78).collect::<String>();
+            stderr!(
+                "\r{} files, {}: {:<78}..",
+                self.count,
+                format_size(self.total),
+                s
+            );
+        }
+    }
 
-	fn finalize(&self) {
-        stderrln!("\r{} files, {}  {:<80}", self.count, format_size(self.total), "");
-	}
+    fn finalize(&self) {
+        stderrln!(
+            "\r{} files, {}  {:<80}",
+            self.count,
+            format_size(self.total),
+            ""
+        );
+    }
 }
-
 
 struct User {
     n_files: u64,
@@ -59,22 +64,19 @@ struct User {
     files: FileHashSet,
 }
 
-
 type UserMap = ::std::collections::HashMap<u32, User>;
-
 
 fn format_size(n_bytes: u64) -> String {
     let (div, desc) = match n_bytes {
-        0 ..= 1023 => return format!("{}", n_bytes),
-        1024 ..= 1048575 => (2u64.pow(10), " KB"),
-        1048576 ..= 1073741823 => (2u64.pow(20), " MB"),
-        1073741824 ..= 1099511627775 => (2u64.pow(30), " GB"),
+        0..=1023 => return format!("{}", n_bytes),
+        1024..=1048575 => (2u64.pow(10), " KB"),
+        1048576..=1073741823 => (2u64.pow(20), " MB"),
+        1073741824..=1099511627775 => (2u64.pow(30), " GB"),
         _ => (2u64.pow(40), " TB"),
     };
 
     format!("{:.1}{}", n_bytes as f64 / div as f64, desc)
 }
-
 
 fn walk(path: &Path, func: &mut dyn FnMut(&Path, &Metadata)) {
     let metadata = match path.symlink_metadata() {
@@ -82,7 +84,7 @@ fn walk(path: &Path, func: &mut dyn FnMut(&Path, &Metadata)) {
         Err(e) => {
             stderrln!("\nError retrieving metadata for {:?}: {:?}", path, e);
             return;
-        },
+        }
     };
 
     func(path, &metadata);
@@ -95,33 +97,32 @@ fn walk(path: &Path, func: &mut dyn FnMut(&Path, &Metadata)) {
             Err(e) => {
                 stderrln!("\nError reading directory {:?}: {:?}", &path, e);
                 return;
-            },
+            }
         };
 
         for record in records {
             match record {
                 Ok(v) => {
                     walk(&v.path(), func);
-                },
+                }
                 Err(e) => {
                     stderrln!("\nError reading file record in {:?}: {:?}", &path, e);
                     return;
-                },
+                }
             };
         }
     }
 }
 
-
 fn collect_stats(path: &str, apparent_size: bool, users: &mut UserMap, counter: &mut Counter) {
     stderrln!("Collecting statistics for {:?}", path);
 
     walk(path.as_ref(), &mut |path, metadata| {
-        let mut user = users.entry(metadata.uid()).or_insert_with(|| {
-            User {n_bytes: 0,
-                  n_files: 0,
-                  n_links: 0,
-                  files: FileHashSet::new()}
+        let mut user = users.entry(metadata.uid()).or_insert_with(|| User {
+            n_bytes: 0,
+            n_files: 0,
+            n_links: 0,
+            files: FileHashSet::new(),
         });
 
         let key = (metadata.dev(), metadata.ino());
@@ -144,7 +145,6 @@ fn collect_stats(path: &str, apparent_size: bool, users: &mut UserMap, counter: 
     counter.finalize();
 }
 
-
 fn calculate_totals(users: &UserMap) -> User {
     let mut total = User {
         n_bytes: 0,
@@ -162,14 +162,17 @@ fn calculate_totals(users: &UserMap) -> User {
     total
 }
 
-
 fn print_user(name: &str, user: &User, total: f64) {
-    println!("{}\t{}\t{}\t{}\t{}\t{:.3}",
-             name, user.n_files, user.n_links,
-             format_size(user.n_bytes), user.n_bytes,
-             user.n_bytes as f64 / total);
+    println!(
+        "{}\t{}\t{}\t{}\t{}\t{:.3}",
+        name,
+        user.n_files,
+        user.n_links,
+        format_size(user.n_bytes),
+        user.n_bytes,
+        user.n_bytes as f64 / total
+    );
 }
-
 
 fn print_stats(users: &UserMap, total: &User) {
     println!("\nUser\tNFiles\tNLinks\tSize\tBytes\tFrac");
@@ -187,23 +190,22 @@ fn print_stats(users: &UserMap, total: &User) {
     print_user("*", total, total.n_bytes as f64);
 }
 
-
 fn parse_args<'a>() -> ArgMatches<'a> {
     App::new("disk_usage")
         .version("0.0.1")
         .author("Mikkel Schubert")
-
-        .arg(Arg::with_name("apparent-size")
-             .long("apparent-size")
-             .help("Calculate apparent size rather than block size."))
-
-        .arg(Arg::with_name("root")
-             .multiple(true)
-             .help("Root folder or file."))
-
+        .arg(
+            Arg::with_name("apparent-size")
+                .long("apparent-size")
+                .help("Calculate apparent size rather than block size."),
+        )
+        .arg(
+            Arg::with_name("root")
+                .multiple(true)
+                .help("Root folder or file."),
+        )
         .get_matches()
 }
-
 
 fn parse_strings(args: &ArgMatches, key: &str) -> Vec<String> {
     if let Some(values) = args.values_of(key) {
@@ -212,7 +214,6 @@ fn parse_strings(args: &ArgMatches, key: &str) -> Vec<String> {
         vec![".".into()]
     }
 }
-
 
 fn main() {
     let args = parse_args();
