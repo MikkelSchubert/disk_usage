@@ -190,7 +190,7 @@ fn print_stats(users: &UserMap, total: &User) {
     print_user("*", total, total.n_bytes as f64);
 }
 
-fn parse_args<'a>() -> ArgMatches<'a> {
+fn parse_args<'a>() -> ArgMatches {
     App::new("disk_usage")
         .version("0.0.1")
         .author("Mikkel Schubert")
