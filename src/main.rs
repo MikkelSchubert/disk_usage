@@ -118,7 +118,7 @@ fn collect_stats(path: &str, apparent_size: bool, users: &mut UserMap, counter: 
     stderrln!("Collecting statistics for {:?}", path);
 
     walk(path.as_ref(), &mut |path, metadata| {
-        let mut user = users.entry(metadata.uid()).or_insert_with(|| User {
+        let user = users.entry(metadata.uid()).or_insert_with(|| User {
             n_bytes: 0,
             n_files: 0,
             n_links: 0,
