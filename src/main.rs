@@ -191,9 +191,9 @@ fn print_stats(users: &UserMap, total: &User) {
 }
 
 fn parse_args<'a>() -> ArgMatches {
-    App::new("disk_usage")
-        .version("0.0.1")
-        .author("Mikkel Schubert")
+    App::new(env!("CARGO_PKG_NAME"))
+        .version(env!("CARGO_PKG_VERSION"))
+        .author(env!("CARGO_PKG_AUTHORS"))
         .arg(
             Arg::with_name("apparent-size")
                 .long("apparent-size")
